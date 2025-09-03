@@ -15,29 +15,29 @@
 //   logger.info("Hello logs!", {structuredData: true});
 //   response.send("Hello from Firebase!");
 // });
-import { onRequest } from "firebase-functions/v2/https";
+import { onCall } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
 import * as logger from "firebase-functions/logger";
-import cors from "cors";
 import { OpenAI } from "openai";
-import { Request, Response } from "express";
 
-// Use Firebase secret, NOT dotenv for deployed environments
+// Use Firebase secret, NOT dotenv
 const openaiApiKey = defineSecret("OPENAI_API_KEY");
 
-// CORS handler
-const corsHandler = cors({ origin: true });
+export const AIsummarizeSpending = onCall(
+  { secrets: [openaiApiKey] },
+  async (request) => {
+    const { expenses } = request.data;
+    const user = request.auth;
 
-export const summarizeSpending = onRequest({ secrets: [openaiApiKey] }, async (req: Request, res: Response) => {
-  corsHandler(req, res, async () => {
+    if (!user) {
+      throw new Error("User must be authenticated.");
+    }
+
+    if (!Array.isArray(expenses)) {
+      throw new Error("Invalid or missing 'expenses' array.");
+    }
+
     try {
-      const expenses = req.body.expenses;
-
-      if (!Array.isArray(expenses)) {
-        res.status(400).send("Invalid expenses array");
-        return;
-      }
-
       const prompt = `
 You are a financial assistant. Summarize the user's spending for this month.
 Highlight total spent, top categories, and any anomalies.
@@ -47,19 +47,20 @@ ${JSON.stringify(expenses, null, 2)}
 `;
 
       const openai = new OpenAI({
-        apiKey: openaiApiKey.value(), // ✅ Firebase secret usage
+        apiKey: openaiApiKey.value(), // Use Firebase secret
       });
 
       const response = await openai.chat.completions.create({
-        model: "gpt-4",
+        model: "gpt-3.5-turbo",
         messages: [{ role: "user", content: prompt }],
       });
 
       const summary = response.choices[0]?.message?.content;
-      res.status(200).json({ summary });
+
+      return { summary };
     } catch (err) {
-      logger.error("OpenAI Error", err);
-      res.status(500).send("Failed to generate summary.");
+      logger.error("OpenAI API Error:", err);
+      throw new Error("Failed to generate spending summary.");
     }
-  });
-});
+  }
+);

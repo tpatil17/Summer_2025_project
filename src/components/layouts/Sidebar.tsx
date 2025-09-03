@@ -21,7 +21,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
         <a href="#" className="hover:bg-gray-700 p-2 rounded flex items-center gap-2" onClick={()=> navigate('/dashboard')}>
           <LayoutDashboard size={20} /> Dashboard
         </a>
-        <a href="#" className="hover:bg-gray-700 p-2 rounded flex items-center gap-2">
+        <a href="#" className="hover:bg-gray-700 p-2 rounded flex items-center gap-2" onClick={()=> navigate('/analytics')}>
           <ChartNoAxesCombined size={20} /> Analytics
         </a>
         <a href="#" className="hover:bg-gray-700 p-2 rounded flex items-center gap-2" onClick={()=> navigate('/expenses')}>
