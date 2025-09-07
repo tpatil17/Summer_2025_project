@@ -1,41 +1,27 @@
 
 import { useState } from 'react';
-import { PlusCircle,DollarSign, Filter } from 'lucide-react';
+import { PlusCircle, DollarSign, Filter } from 'lucide-react';
 import PageHeader from '../layouts/PageHeader';
 import Topbar from '../layouts/Topbar';
 import Sidebar from '../layouts/Sidebar';
 import ExpenseList from '../layouts/ExpenseCard';
 import ImageCaptureModal from '../OCR/ImageCaptureModal';
 import type { ReceiptData } from '../OCR/ImageCaptureModal';
-import AddTransactionModal from './AddExpenseModal';
-
+import AddTransactionModal from './AddExpenseModal'; // ✅ renamed correctly
+import { auth } from '../../firebase'; // ✅ make sure you have access to currentUser
 
 const ExpensesPage: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [showExpModal, setShowExpModal] = useState(false);
+  const [showReceiptModal, setShowReceiptModal] = useState(false);
 
+  const user = auth.currentUser;
 
-  const [showModal, setShowModal] = useState(false);
-  const [amount, setAmount] = useState('');
-  const [date, setDate] = useState('');
-  const [note, setNote] = useState('');
-
+  // 🧾 When receipt is parsed, optionally pre-fill something later
   const handleReceiptExtract = (data: ReceiptData) => {
-    if (data.extracted.total) setAmount(data.extracted.total.toString());
-    if (data.extracted.date) setDate(data.extracted.date);
-    setNote(data.extracted.store);
-
-    setShowModal(false);
-    setShowExpModal(true);
-  };
- 
-
-
-  const handleCloseTransactionModal = () => {
-    setShowExpModal(false);
-    setAmount('');
-    setDate('');
-    setNote('');
+    // You could later pass parsed items to a receipt review modal
+    setShowReceiptModal(false);
+    // Could trigger a second modal if needed
   };
 
   return (
@@ -65,47 +51,51 @@ const ExpensesPage: React.FC = () => {
             icon={DollarSign}
             description="Track and manage all your financial transactions."
           />
+
+          {/* Buttons */}
           <div className="flex gap-4 mt-4 mb-6">
             <button
-              className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded mt-4 mb-6"
+              className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded"
               onClick={() => setShowExpModal(true)}
             >
               <PlusCircle size={20} /> Add Transaction
             </button>
-              {showExpModal && (
-                <AddTransactionModal
-                  onClose={handleCloseTransactionModal}
-                  defaultAmount={amount}
-                  defaultDate={date}
-                  defaultNote={note}
-                />
-              )}
-  
+
             <button
-              className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded mt-4 mb-6"
-              onClick={() => setShowModal(true)}
+              className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded"
+              onClick={() => setShowReceiptModal(true)}
             >
               <PlusCircle size={20} /> Upload Receipt
             </button>
+          </div>
 
-          {showModal && (
+          {/* Add Transaction Modal */}
+          <AddTransactionModal
+            isOpen={showExpModal}
+            onClose={() => setShowExpModal(false)}
+            userId={user?.uid || ''}
+          />
+
+          {/* Upload Receipt Modal */}
+          {showReceiptModal && (
             <ImageCaptureModal
-              onClose={() => setShowModal(false)}
+              onClose={() => setShowReceiptModal(false)}
               onExtract={handleReceiptExtract}
             />
           )}
 
-          </div>
-
-
+          {/* Transactions Header + Filter */}
           <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <h2 className="mt-4 text-xl font-semibold font-headline">Transaction History</h2>
+            <h2 className="mt-4 text-xl font-semibold font-headline">
+              Transaction History
+            </h2>
             <button className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded mt-2 sm:mt-0">
               <Filter className="mr-2 h-4 w-4" /> Filter
             </button>
           </div>
 
-          <ExpenseList />
+          {/* Expense List or Dashboard Component */}
+
         </div>
       </div>
     </div>
