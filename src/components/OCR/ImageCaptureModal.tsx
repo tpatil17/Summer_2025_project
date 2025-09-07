@@ -5,6 +5,7 @@ import { parseReceiptText } from "./ParseReceipt";
 import { getFunctions, httpsCallable } from "firebase/functions";
 import Tesseract from "tesseract.js";
 
+
 export interface EnrichedLineItem {
   name: string;
   price: number;
@@ -65,6 +66,8 @@ const ImageCaptureModal: React.FC<Props> = ({ onClose, onExtract }) => {
         items: EnrichedLineItem[];
       };
 
+  
+
       setStatus("✅ Done!");
 
       onExtract({
@@ -76,6 +79,7 @@ const ImageCaptureModal: React.FC<Props> = ({ onClose, onExtract }) => {
           items: enriched.items,
         },
       });
+
 
       setTimeout(() => {
         setLoading(false);
