@@ -95,6 +95,7 @@ const ExpensesPage: React.FC = () => {
           </div>
 
           {/* Expense List or Dashboard Component */}
+          <ExpenseList ></ExpenseList>
 
         </div>
       </div>

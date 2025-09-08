@@ -49,12 +49,14 @@ const AddExpenseForm: React.FC<AddExpenseFormProps> = ({ onClose, userId }) => {
 
     try {
       await addDoc(collection(db, "expenses"), expense);
+      await addDoc(collection(db, 'receipts'), expense);
       alert("Expense added successfully");
       onClose(); // close the form
     } catch (error) {
       console.error("Error adding expense:", error);
       alert("Failed to add expense.");
     }
+
   };
 
   return (

@@ -1,5 +1,7 @@
 import { db } from "../firebase";
 import { v4 as uuidv4 } from "uuid";
+import { saveReceiptSummary } from "./SaveReceipts";
+
 
 interface EnrichedLineItem {
   name: string;
@@ -43,4 +45,5 @@ export async function saveExpensesFromReceipt(
       })
     )
   );
+  await saveReceiptSummary(userId, receiptId, receipt, "receipt");
 }

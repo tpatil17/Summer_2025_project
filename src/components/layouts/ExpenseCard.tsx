@@ -15,10 +15,9 @@ import EditExpenseModal from '../Expenses/EditExpenseModal'; // Make sure this p
 
 interface Expense {
   id: string;
-  amount: number;
-  category: string;
+  total: number;
+  merchant: string;
   date: string;
-  note?: string;
 }
 
 const ExpenseList: React.FC = () => {
@@ -37,7 +36,7 @@ const ExpenseList: React.FC = () => {
       }
 
       const q = query(
-        collection(db, 'expenses'),
+        collection(db, 'receipts'),
         where('userId', '==', user.uid),
         orderBy('date', 'desc')
       );
@@ -60,7 +59,7 @@ const ExpenseList: React.FC = () => {
 
   const handleDelete = async (id: string) => {
     try {
-      await deleteDoc(doc(db, 'expenses', id));
+      await deleteDoc(doc(db, 'receipts', id));
     } catch (err) {
       console.error('Failed to delete expense:', err);
     }
@@ -101,18 +100,15 @@ const ExpenseList: React.FC = () => {
             <div className="mb-4">
               <div className="flex justify-between items-center">
                 <p className="text-lg font-semibold text-indigo-700">
-                  ${expense.amount.toFixed(2)}
+                  ${expense.total.toFixed(2)}
                 </p>
                 <p className="text-sm text-gray-500">
                   {new Date(expense.date).toLocaleDateString()}
                 </p>
               </div>
               <p className="text-sm text-gray-700 mt-1">
-                <span className="font-medium">Category:</span> {expense.category}
+                <span className="font-medium">Merchant:</span> {expense.merchant}
               </p>
-              {expense.note && (
-                <p className="text-sm text-gray-500 italic mt-1">{expense.note}</p>
-              )}
             </div>
           </li>
         ))}
