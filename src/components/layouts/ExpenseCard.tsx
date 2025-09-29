@@ -12,6 +12,8 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { db, auth } from '../../firebase';
 import { Edit3, Trash2 } from 'lucide-react';
 import EditExpenseModal from '../Expenses/EditExpenseModal'; // Make sure this path is correct
+import { handleDelete } from './handleDelete';
+
 
 interface Expense {
   id: string;
@@ -57,14 +59,9 @@ const ExpenseList: React.FC = () => {
     return () => unsubscribeAuth();
   }, []);
 
-  const handleDelete = async (id: string) => {
-    try {
-      await deleteDoc(doc(db, 'receipts', id));
-    } catch (err) {
-      console.error('Failed to delete expense:', err);
-    }
-  };
 
+
+  
   const handleEdit = (expense: Expense) => {
     setSelectedExpense(expense);
     setIsEditOpen(true);

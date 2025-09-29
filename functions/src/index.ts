@@ -19,6 +19,7 @@ import { onCall } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
 import * as logger from "firebase-functions/logger";
 import {saveExpensesFromReceipt} from "./handlers/SaveExpenses";
+import { FIXED_CATEGORIES,ExpenseCategory } from "./config/fixedCategories";
 
 import { OpenAI } from "openai";
 
@@ -138,7 +139,10 @@ export const enrichParsedReceipt = onCall(
                         name: { type: "string" },
                         price: { type: "number" },
                         quantity: { type: "number" },
-                        category: { type: "string" }
+                        category: {
+                          type: "string",
+                          enum: FIXED_CATEGORIES, // ✅ restrict to allowed values
+                        },
                       },
                       required: ["name", "price", "quantity", "category"]
                     }
@@ -160,7 +164,9 @@ Here is a receipt:
 - Total: ${total}
 - Items:\n${itemList}
 
-Please enrich each item with category and quantity.`.trim(),
+Please enrich each item with quantity and a category chosen strictly from this list:
+${FIXED_CATEGORIES.join(", ")}
+            `.trim(),
           },
         ],
       });
@@ -172,6 +178,14 @@ Please enrich each item with category and quantity.`.trim(),
       }
 
       const enrichedReceipt: EnrichedReceipt = JSON.parse(toolCall.function.arguments);
+
+      enrichedReceipt.items = enrichedReceipt.items.map((item) => {
+        if (!FIXED_CATEGORIES.includes(item.category as ExpenseCategory)) {
+          logger.warn(`⚠️ Invalid category "${item.category}" → defaulting to "Other"`);
+          return { ...item, category: "Other" };
+        }
+        return item;
+      });
 
       logger.info("✅ Enriched receipt:", enrichedReceipt);
       await saveExpensesFromReceipt(user.uid, enrichedReceipt);
@@ -187,3 +201,5 @@ Please enrich each item with category and quantity.`.trim(),
     }
   }
 );
+
+export { deleteReceipt } from "./triggers/receipts";

@@ -2,6 +2,9 @@ import { useState } from "react";
 import { db } from "../../firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { v4 as uuidv4 } from "uuid";
+import CategorySelect from '../Styles/SelectDropdown';
+import type { CategoryOption } from "../Styles/SelectDropdown";
+
 
 interface AddExpenseFormProps {
   onClose: () => void;
@@ -12,7 +15,7 @@ const AddExpenseForm: React.FC<AddExpenseFormProps> = ({ onClose, userId }) => {
   const [itemName, setItemName] = useState("");
   const [amount, setAmount] = useState<number | "">("");
   const [quantity, setQuantity] = useState<number>(1);
-  const [category, setCategory] = useState("");
+  const [category, setCategory] = useState<CategoryOption | null>(null);
   const [merchant, setMerchant] = useState("");
   const [date, setDate] = useState(""); // YYYY-MM-DD
   const [time, setTime] = useState(""); // HH:mm
@@ -86,14 +89,7 @@ const AddExpenseForm: React.FC<AddExpenseFormProps> = ({ onClose, userId }) => {
           value={quantity}
           onChange={(e) => setQuantity(Number(e.target.value))}
         />
-        <input
-          className="w-full border p-2 rounded"
-          type="text"
-          placeholder="Category"
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          required
-        />
+        <CategorySelect value={category} onChange={setCategory} ></CategorySelect>
         <input
           className="w-full border p-2 rounded"
           type="text"

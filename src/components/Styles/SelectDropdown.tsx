@@ -6,17 +6,17 @@ export type CategoryOption = {
   value: string;
   label: string;
 };
-
-const categoryOptions: CategoryOption[] = [
-  { value: 'Groceries', label: 'Groceries' },
-  { value: 'Transport', label: 'Transport' },
-  { value: 'Entertainment', label: 'Entertainment' },
-  { value: 'Utilities', label: 'Utilities' },
-  { value: 'Food & Dining', label: 'Food & Dining' },
-  { value: 'Health & Fitness', label: 'Health & Fitness' },
-  { value: 'Shopping', label: 'Shopping' },
-  { value: 'Income', label: 'Income' },
-  { value: 'Other', label: 'Other' },
+export const categoryOptions: CategoryOption[] = [
+  { value: "Food & Dining", label: "Food & Dining" },
+  { value: "Housing & Utilities", label: "Housing & Utilities" },
+  { value: "Transportation", label: "Transportation" },
+  { value: "Health & Wellness", label: "Health & Wellness" },
+  { value: "Entertainment & Leisure", label: "Entertainment & Leisure" },
+  { value: "Shopping & Retail", label: "Shopping & Retail" },
+  { value: "Travel & Vacations", label: "Travel & Vacations" },
+  { value: "Education & Learning", label: "Education & Learning" },
+  { value: "Finance & Insurance", label: "Finance & Insurance" },
+  { value: "Other", label: "Other" },
 ];
 
 interface Props {

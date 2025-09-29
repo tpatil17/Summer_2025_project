@@ -1,22 +1,18 @@
 
-import { useState, useEffect } from 'react';
-import {  DollarSign} from 'lucide-react';
-import PageHeader from '../layouts/PageHeader';
-
-import Topbar from '../layouts/Topbar';
-import Sidebar from '../layouts/Sidebar';
-
-import DashboardCard from './DashboardCard';
-import { collection, query, where, onSnapshot } from 'firebase/firestore';
-import { auth, db } from '../../firebase';
-
-
-
-
-interface CategoryTotals {
-  category: string;
-  total: number;
-}
+import { useState, useEffect } from "react";
+import { DollarSign } from "lucide-react";
+import PageHeader from "../layouts/PageHeader";
+import Topbar from "../layouts/Topbar";
+import Sidebar from "../layouts/Sidebar";
+import DashboardCard from "./DashboardCard";
+import {
+  collection,
+  query,
+  where,
+  onSnapshot,
+  Timestamp,
+} from "firebase/firestore";
+import { auth, db } from "../../firebase";
 
 import {
   BarChart,
@@ -26,15 +22,29 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-} from 'recharts';
+} from "recharts";
+
+interface CategoryTotals {
+  category: string;
+  total: number;
+}
+
+interface Expense {
+  amount: number;
+  category?: string;
+  createdAt: any; // Firestore Timestamp or Date string
+  [key: string]: any;
+}
 
 const DashboardPage: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-
-
   const [monthlyTotal, setMonthlyTotal] = useState<number>(0);
   const [lastTotal, setLastTotal] = useState<number>(0);
   const [ExRate, setRate] = useState<number>(0);
+  const [filteredThisMonthData, setFilteredThisMonthData] = useState<
+    CategoryTotals[]
+  >([]);
+
   function getStartOfPreviousMonth(): Date {
     const now = new Date();
     const year = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
@@ -42,64 +52,67 @@ const DashboardPage: React.FC = () => {
     return new Date(year, month, 1);
   }
 
-  // Graph data
-  const [filteredThisMonthData, setFilteredThisMonthData] = useState<CategoryTotals[]>([]);
-
   useEffect(() => {
     const userId = auth.currentUser?.uid;
     if (!userId) return;
-  
-    const q = query(collection(db, 'expenses'), where('userId', '==', userId));
-  
+
+    const prevMonthStart = getStartOfPreviousMonth();
+    const q = query(
+      collection(db, "expenses"),
+      where("userId", "==", userId),
+      where("createdAt", ">=", Timestamp.fromDate(prevMonthStart)) // only last + this month
+    );
+
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const allExpenses = snapshot.docs.map(doc => doc.data());
+      const allExpenses = snapshot.docs.map((doc) => doc.data() as Expense);
       const now = new Date();
       const thisMonth = now.getMonth();
-      const pastMonth = getStartOfPreviousMonth().getMonth();
-      const pastYear = getStartOfPreviousMonth().getFullYear();
       const thisYear = now.getFullYear();
-  
+
+      const prevMonthDate = getStartOfPreviousMonth();
+      const pastMonth = prevMonthDate.getMonth();
+      const pastYear = prevMonthDate.getFullYear();
+
       const totals: Record<string, number> = {};
       let monthlySum = 0;
       let pastSum = 0;
 
       allExpenses.forEach((exp) => {
-        const createdAt = new Date(exp.createdAt);
-        if (
-          createdAt.getFullYear() === thisYear &&
-          createdAt.getMonth() === thisMonth
-        ) {
+        const createdAt = exp.createdAt?.toDate
+          ? exp.createdAt.toDate()
+          : new Date(exp.createdAt);
+
+        const category = exp.category || "Uncategorized";
+
+        // This month totals
+        if (createdAt.getFullYear() === thisYear && createdAt.getMonth() === thisMonth) {
           monthlySum += exp.amount || 0;
-  
-          if (!totals[exp.category]) {
-            totals[exp.category] = 0;
-          }
-          totals[exp.category] += exp.amount || 0;
+          if (!totals[category]) totals[category] = 0;
+          totals[category] += exp.amount || 0;
         }
-        if ( createdAt.getMonth() === pastMonth &&
-            createdAt.getFullYear() === pastYear){
-              pastSum+= exp.amount || 0;
-            }
+
+        // Last month totals
+        if (createdAt.getFullYear() === pastYear && createdAt.getMonth() === pastMonth) {
+          pastSum += exp.amount || 0;
+        }
       });
 
-  
-      const formattedChartData = Object.entries(totals).map(([category, total]) => ({
-        category,
-        total,
-      }));
-  
+      // Chart data sorted by spend
+      const formattedChartData = Object.entries(totals)
+        .map(([category, total]) => ({ category, total }))
+        .sort((a, b) => b.total - a.total);
+
       setFilteredThisMonthData(formattedChartData);
       setMonthlyTotal(monthlySum);
-      setLastTotal(lastTotal);
-      if(lastTotal === 0 ){
-        setRate(0);
-      }
-      else{
-        setRate(Math.round(((monthlySum-pastSum)/pastSum)*100))
-      }
+      setLastTotal(pastSum);
 
+      if (pastSum === 0) {
+        setRate(0);
+      } else {
+        setRate(Math.round(((monthlySum - pastSum) / pastSum) * 100));
+      }
     });
-  
+
     return () => unsubscribe();
   }, []);
 
@@ -121,7 +134,7 @@ const DashboardPage: React.FC = () => {
       <div
         className="pt-16"
         style={{
-          marginLeft: isSidebarOpen ? '16rem' : '0',
+          marginLeft: isSidebarOpen ? "16rem" : "0",
         }}
       >
         <div className="h-[calc(100vh-4rem)] overflow-y-auto p-6">
@@ -130,22 +143,35 @@ const DashboardPage: React.FC = () => {
             icon={DollarSign}
             description="Your financial overview"
           />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <DashboardCard title="$ Monthly Expense" value={"$"+String(Math.round(monthlyTotal))} />
-        <DashboardCard title="Upcoming Renewals" value="3 services" />
-        <DashboardCard title="Active Alerts" value="2 flagged" />
-        <DashboardCard title="Expense vs Last Month" value={String(ExRate)+"%"} />
-        </div>
-        <div className="bg-white rounded-xl shadow p-6 mt-6">
-            {/* Header with total */}
-              <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">This Month’s Expenses by Category</h3>
+
+          {/* Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <DashboardCard
+              title="$ Monthly Expense"
+              value={"$" + String(Math.round(monthlyTotal))}
+            />
+            <DashboardCard title="Upcoming Renewals" value="3 services" />
+            <DashboardCard title="Active Alerts" value="2 flagged" />
+            <DashboardCard
+              title="Expense vs Last Month"
+              value={String(ExRate) + "%"}
+            />
+          </div>
+
+          {/* Chart */}
+          <div className="bg-white rounded-xl shadow p-6 mt-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">
+                This Month’s Expenses by Category
+              </h3>
               <p className="text-sm text-gray-600">
-                Total: <span className="font-semibold text-indigo-600">{String("$"+Math.round(monthlyTotal))}</span>
+                Total:{" "}
+                <span className="font-semibold text-indigo-600">
+                  {"$" + Math.round(monthlyTotal)}
+                </span>
               </p>
             </div>
 
-            {/* Chart */}
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={filteredThisMonthData}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -156,7 +182,6 @@ const DashboardPage: React.FC = () => {
               </BarChart>
             </ResponsiveContainer>
           </div>
-
         </div>
       </div>
     </div>
