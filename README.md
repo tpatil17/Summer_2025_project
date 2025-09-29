@@ -1,54 +1,118 @@
-# React + TypeScript + Vite
+# 💸 AI-Powered Expense Tracker  
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A full-stack **expense management app** built with **React + TypeScript + Firebase + OpenAI GPT-4o**.  
+Track spending, scan receipts with OCR, auto-categorize expenses, and get AI-powered insights.  
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## ✨ Features  
 
-## Expanding the ESLint configuration
+### 🔑 Core  
+- Secure **Firebase Authentication** (Email/Password, Google)  
+- Real-time **Firestore Database** for expenses & receipts  
+- **Dashboard** with charts, totals, and monthly comparisons  
+- **Delete flow**: remove receipts + related expenses in one atomic operation  
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### 🧾 Expense & Receipt Ingestion  
+- Manual expense entry form  
+- **Receipt upload modal** (camera capture + drag & drop)  
+- OCR via **Tesseract.js** to extract raw text  
+- Receipt parser → structured expense data  
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
+### 🤖 AI Integration (OpenAI GPT-4o)  
+- `enrichParsedReceipt` Cloud Function with **function calling**  
+- Adds **categories + quantities** to receipt items  
+- Restricted to **10 fixed categories** (aligned with UI dropdowns):  
+  1. Food & Dining  
+  2. Housing & Utilities  
+  3. Transportation  
+  4. Health & Wellness  
+  5. Entertainment & Leisure  
+  6. Shopping & Retail  
+  7. Travel & Vacations  
+  8. Education & Learning  
+  9. Finance & Insurance  
+  10. Other  
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### 🔐 Security  
+- Firestore security rules scoped to **userId**  
+- Protected **callable functions** (only authenticated users can call)  
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+---
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
+## 📊 Dashboard Preview  
+- Category-based expense breakdown (Recharts)  
+- Monthly totals with last month comparison  
+- Auto-refreshes on **add / edit / delete**  
+
+---
+
+## 🚀 Roadmap  
+
+- **Dashboard Enhancements**  
+  - Add cards for upcoming renewals + active alerts  
+  - Improved category insights (month-over-month trends)  
+
+- **Fraud Detection Engine (ML)**  
+  - Train anomaly detection (Isolation Forest / Autoencoder)  
+  - Flag suspicious expenses  
+
+- **Expense Forecasting**  
+  - Predict next month’s spend (Prophet / ARIMA / LSTM)  
+
+- **AI Spending Insights**  
+  - GPT-powered natural language summaries of spending patterns  
+
+- **CI/CD & Polish**  
+  - GitHub Actions for deploys  
+  - Secrets management for Firebase + OpenAI  
+  - Unit tests & improved UI/UX  
+
+---
+
+## 🛠️ Getting Started  
+
+### 1. Clone the Repository  
+```bash
+git clone https://github.com/tpatil17/Summer_2025_project.git
+
+# Frontend
+cd frontend
+npm install
+
+# Functions
+cd ../functions
+npm install
+
+VITE_FIREBASE_API_KEY=<your_firebase_api_key>
+VITE_FIREBASE_AUTH_DOMAIN=<your_project>.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=<your_project_id>
+VITE_FIREBASE_STORAGE_BUCKET=<your_project>.appspot.com
+VITE_FIREBASE_MESSAGING_SENDER_ID=<your_sender_id>
+VITE_FIREBASE_APP_ID=<your_app_id>
+VITE_OPENAI_API_KEY=<your_openai_api_key>
+
+cd functions
+firebase functions:secrets:set OPENAI_API_KEY
+
+# Optional: run Firebase emulator
+firebase emulators:start
+
+# Frontend dev server
+cd frontend
+npm run dev
+
+# Deploy functions
+cd functions
+npm run build
+firebase deploy --only functions
+
+# Deploy frontend
+cd frontend
+npm run build
+firebase deploy --only hosting
+
+git checkout -b feature/my-feature
+
+git commit -m "Add new feature"
+
