@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { DollarSign } from "lucide-react";
+import { DollarSign, DownloadCloud } from "lucide-react";
 import PageHeader from "../layouts/PageHeader";
 import Topbar from "../layouts/Topbar";
 import Sidebar from "../layouts/Sidebar";
@@ -24,6 +24,9 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
+import { getFunctions, httpsCallable } from "firebase/functions";
+import { app } from "../../firebase";
+
 interface CategoryTotals {
   category: string;
   total: number;
@@ -35,6 +38,22 @@ interface Expense {
   createdAt: any; // Firestore Timestamp or Date string
   [key: string]: any;
 }
+
+const functions = getFunctions(app);
+// Export the expenses data to a csv file for training the AI/ML engine
+
+
+export const downloadUserExport = async () => {
+  try {
+    const exportFn = httpsCallable(functions, "exportExpenses");
+    const result = await exportFn();
+    const { downloadUrl, count } = result.data as any;
+    console.log(`Exported ${count} expenses`);
+    window.open(downloadUrl, "_blank"); // triggers download
+  } catch (err) {
+    console.error("Export failed:", err);
+  }
+};
 
 const DashboardPage: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -51,6 +70,7 @@ const DashboardPage: React.FC = () => {
     const month = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
     return new Date(year, month, 1);
   }
+
 
   useEffect(() => {
     const userId = auth.currentUser?.uid;
@@ -138,11 +158,19 @@ const DashboardPage: React.FC = () => {
         }}
       >
         <div className="h-[calc(100vh-4rem)] overflow-y-auto p-6">
+          <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <PageHeader
             title="Dashboard"
             icon={DollarSign}
             description="Your financial overview"
           />
+          <button
+              className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded mt-2 sm:mt-0"
+              onClick={() => downloadUserExport()}
+            >
+              <DownloadCloud size={20} /> GetExpenses 
+            </button>
+          </div>
 
           {/* Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">

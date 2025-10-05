@@ -203,3 +203,5 @@ ${FIXED_CATEGORIES.join(", ")}
 );
 
 export { deleteReceipt } from "./triggers/receipts";
+
+export { exportExpenses } from "./https/exports/exportExpenses"
